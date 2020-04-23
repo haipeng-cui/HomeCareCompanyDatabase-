@@ -1,0 +1,119 @@
+//Retrieve the entire contents of nurse.
+SELECT *
+FROM Nurse;
+
+//Display how many female or male the company has
+SELECT Gender, COUNT(*)
+FROM Nurse
+GROUP BY Gender;
+
+//Retrieve the nurse by Health Ministry registration number.
+SELECT *
+FROM Nurse
+WHERE MRNNumber=1234;
+
+//Retrieve the nurse by name in ascending order.
+SELECT *
+FROM Nurse
+ORDER BY FName ASC;
+
+//Count how many nurse the company has.
+SELECT COUNT(*)
+FROM Nurse
+
+//Display nurses who went to the client’s place when a former nurse missed the
+       schedule.
+SELECT *
+FROM Nurse
+WHERE EID IN (SELECT SubsituteEID
+		FROM VisitRecord
+		WHERE SubsituteEID IS NOT NULL);
+
+//Retrieve patient address in the contract information.
+SELECT Contract.*, Client.FName,Client.LName,Client.BuildingNumber,Client.Street,Client.City, Client.Province,Client.ZipCode
+FROM (Contract JOIN Client ON Contract.ClientInsuranceNumber = Client.ClientInsuranceNumber);
+
+//Retrieve the entire contents of patients and their contract information.
+SELECT Contract.*, Client.LName,Client.FName
+FROM (Contract JOIN Client ON Contract.ClientInsuranceNumber = Client.ClientInsuranceNumber);
+
+//Retrieve a patient by health care number.
+SELECT *
+FROM Client
+WHERE ClientInsuranceNumber=1001
+
+//Retrieve a patient by name.
+SELECT *
+FROM Client
+WHERE FName = 'Haipeng' AND LName = 'Cui'
+
+//Retrieve a contract by contract number.
+SELECT *
+FROM Contract
+WHERE ContractID=50001
+
+//Display a patient’s responsing nurses.
+SELECT Client.FName,Client.LName,Nurse.Fname,Nurse.Lname
+FROM ((Client NATURAL JOIN Contract) NATURAL JOIN Contract_Nurse) JOIN Nurse ON Contract_Nurse.EID= Nurse.EID
+
+//Retrieve a patient arranged shedule
+SELECT Client.Fname,Client.LName,StartTime,EndTime,WeekDays
+FROM  (Contract_Schedule NATURAL JOIN Contract) RIGHT JOIN Client ON Client.ClientInsuranceNumber=Contract.ClientInsuranceNumber;
+
+// Display all report which involved by a nurse
+SELECT *
+FROM (VisitRecord NATURAL JOIN Contract_Nurse) 
+WHERE Contract_Nurse.EID=2001
+
+
+//Query an missed visits
+SELECT Nurse.EID, Nurse.Fname,Nurse.LName
+FROM ( VisitRecord NATURAL JOIN Contract_Nurse) JOIN Nurse ON Nurse.EID=Contract_Nurse.EID
+WHERE SubsituteEID IS NOT NULL
+
+//Query an extra contract visits
+SELECT Nurse.EID, Nurse.Fname,Nurse.LName
+FROM VisitRecord JOIN Nurse ON VisitRecord.SubsituteEID=Nurse.EID
+
+//Retrieve the insurance number and the record number from a report.
+SELECT ClientInsuranceNumber, RecordID
+FROM Contract,VisitRecord
+WHERE VisitRecord.ContractID = Contract.ContractID;
+
+//Count number of reports in each contract. 
+SELECT ContractID,  COUNT(RecordID)
+FROM VisitRecord
+GROUP BY ContractID;
+
+//Retrieve the all distinct services provided by all nurses in the company.
+SELECT DISTINCT TypeOfService
+FROM VisitRecord;
+
+//Retrieve nurse who do not meet patients’ schedule.
+SELECT FName, LName
+FROM Nurse
+WHERE EID IN (SELECT Contract_Nurse.EID
+              FROM VisitRecord NATURAL JOIN  Contract_Nurse
+              WHERE VisitRecord.SubsituteEID IS NOT NULL);
+
+//Retrieve Illness description from all reports of each patient.
+SELECT  Fname, Lname, IllnessDescription
+FROM ( VisitRecord NATURAL JOIN Contract) NATURAL JOIN Client;
+
+
+//Update
+UPDATE Nurse
+SET Fname = 'Mingzi', Lname= 'Hai'
+WHERE EID=2001;
+
+// Delete
+DELETE FROM Nurse
+WHERE EID=2005;
+
+//View ---Query an missed visits
+CREATE VIEW Nurse_VisitRecord AS
+SELECT Nurse.EID, Nurse.Fname,Nurse.LName
+FROM ( VisitRecord NATURAL JOIN Contract_Nurse) JOIN Nurse ON Nurse.EID=Contract_Nurse.EID
+WHERE SubsituteEID IS NOT NULL
+
+SELECT * FROM Nurse_VisitRecord;
